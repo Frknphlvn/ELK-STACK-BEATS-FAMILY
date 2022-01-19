@@ -1,97 +1,39 @@
-###################### Filebeat Configuration Example #########################
+###################### Winlogbeat Configuration Example ########################
 
 # This file is an example configuration file highlighting only the most common
-# options. The filebeat.reference.yml file from the same directory contains all the
-# supported options with more comments. You can use it as a reference.
+# options. The winlogbeat.reference.yml file from the same directory contains
+# all the supported options with more comments. You can use it as a reference.
 #
 # You can find the full configuration reference here:
-# https://www.elastic.co/guide/en/beats/filebeat/index.html
+# https://www.elastic.co/guide/en/beats/winlogbeat/index.html
 
-# For more available modules and options, please see the filebeat.reference.yml sample
-# configuration file.
+# ======================== Winlogbeat specific options =========================
 
-# ============================== Filebeat inputs ===============================
+# event_logs specifies a list of event logs to monitor as well as any
+# accompanying options. The YAML data type of event_logs is a list of
+# dictionaries.
+#
+# The supported keys are name (required), tags, fields, fields_under_root,
+# forwarded, ignore_older, level, event_id, provider, and include_xml. Please
+# visit the documentation for the complete details of each option.
+# https://go.es.io/WinlogbeatConfig
 
-filebeat.inputs:
-
-- type: log
-  enabled: true
-  paths:
-    - "C:/Windows/System32/dhcp/DhcpSrvLog-*.log"
-  fields:
-    source_service: dhcp
-  fields_under_root: true
-  
-- type: log
-  enabled: true
-  paths:
-    - "C:/inetpub/logs/LogFiles/*/*.log"
-  fields:
-    source_service: iis_access
-  fields_under_root: true
-
-- type: log
-  enabled: true
-  paths:
-    - "C:/Windows/System32/LogFiles/HTTPERR/*.log"
-  fields:
-    source_service: iis_error
-  fields_under_root: true
- 
-- type: log
-  enabled: true
-  paths:
-    - 'C:\Windows\System32\LogFiles\Firewall\pfirewall.log'
-  fields:
-    source_service: pfirewall
-  fields_under_root: true   
-  
-# Each - is an input. Most options can be set at the input level, so
-# you can use different inputs for various configurations.
-# Below are the input specific configurations.
-
-# filestream is an input for collecting log messages from files.
-- type: filestream
-
-  # Change to true to enable this input configuration.
-  enabled: false
-
-  # Paths that should be crawled and fetched. Glob based paths.
-  paths:
-    - /var/log/*.log
-    #- c:\programdata\elasticsearch\logs\*
-
-  # Exclude lines. A list of regular expressions to match. It drops the lines that are
-  # matching any regular expression from the list.
-  #exclude_lines: ['^DBG']
-
-  # Include lines. A list of regular expressions to match. It exports the lines that are
-  # matching any regular expression from the list.
-  #include_lines: ['^ERR', '^WARN']
-
-  # Exclude files. A list of regular expressions to match. Filebeat drops the files that
-  # are matching any regular expression from the list. By default, no files are dropped.
-  #prospector.scanner.exclude_files: ['.gz$']
-
-  # Optional additional fields. These fields can be freely picked
-  # to add additional information to the crawled log files for filtering
-  #fields:
-  #  level: debug
-  #  review: 1
-
-# ============================== Filebeat modules ==============================
-
-filebeat.config.modules:
-  # Glob pattern for configuration loading
-  path: ${path.config}/modules.d/*.yml
-
-  # Set to true to enable config reloading
-  reload.enabled: false
-
-  # Period on which files under path should be checked for changes
-  #reload.period: 10s
-
-# ======================= Elasticsearch template setting =======================
+winlogbeat.event_logs:
+  - name: Application
+    ignore_older: 72h
+  - name: System
+    ignore_older: 72h
+  - name: Microsoft-Windows-TaskScheduler/Operational
+    ignore_older: 72h
+  - name: Microsoft-Windows-Windows Defender/Operational
+    ignore_older: 72h
+  - name: Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational
+    ignore_older: 72h
+  - name: Microsoft-Windows-TerminalServices-LocalSessionManager/Operational
+    ignore_older: 72h
+  - name: Security
+    ignore_older: 72h
+# ====================== Elasticsearch template settings =======================
 
 setup.template.settings:
   index.number_of_shards: 1
@@ -145,7 +87,7 @@ setup.template.settings:
 
 # =============================== Elastic Cloud ================================
 
-# These settings simplify using Filebeat with the Elastic Cloud (https://cloud.elastic.co/).
+# These settings simplify using Winlogbeat with the Elastic Cloud (https://cloud.elastic.co/).
 
 # The cloud.id setting overwrites the `output.elasticsearch.hosts` and
 # `setup.kibana.host` options.
@@ -176,7 +118,7 @@ setup.template.settings:
 # ------------------------------ Logstash Output -------------------------------
 output.logstash:
   # The Logstash hosts
-  hosts: ["192.168.50.128:6565"]
+  hosts: ["192.168.50.128:5050"]
 
   # Optional SSL. By default is off.
   # List of root certificates for HTTPS server verifications
@@ -193,8 +135,6 @@ processors:
   - add_host_metadata:
       when.not.contains.tags: forwarded
   - add_cloud_metadata: ~
-  - add_docker_metadata: ~
-  - add_kubernetes_metadata: ~
 
 # ================================== Logging ===================================
 
@@ -208,7 +148,7 @@ processors:
 #logging.selectors: ["*"]
 
 # ============================= X-Pack Monitoring ==============================
-# Filebeat can export internal metrics to a central Elasticsearch monitoring
+# Winlogbeat can export internal metrics to a central Elasticsearch monitoring
 # cluster.  This requires xpack monitoring to be enabled in Elasticsearch.  The
 # reporting is disabled by default.
 
@@ -216,7 +156,7 @@ processors:
 #monitoring.enabled: false
 
 # Sets the UUID of the Elasticsearch cluster under which monitoring data for this
-# Filebeat instance will appear in the Stack Monitoring UI. If output.elasticsearch
+# Winlogbeat instance will appear in the Stack Monitoring UI. If output.elasticsearch
 # is enabled, the UUID is derived from the Elasticsearch cluster referenced by output.elasticsearch.
 #monitoring.cluster_uuid:
 
@@ -231,12 +171,12 @@ processors:
 
 # ============================== Instrumentation ===============================
 
-# Instrumentation support for the filebeat.
+# Instrumentation support for the winlogbeat.
 #instrumentation:
-    # Set to true to enable instrumentation of filebeat.
+    # Set to true to enable instrumentation of winlogbeat.
     #enabled: false
 
-    # Environment in which filebeat is running on (eg: staging, production, etc.)
+    # Environment in which winlogbeat is running on (eg: staging, production, etc.)
     #environment: ""
 
     # APM Server hosts to report instrumentation results to.
